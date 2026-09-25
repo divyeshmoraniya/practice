@@ -1,28 +1,31 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import helmet from "helmet";
-import { connectMongo } from "./src/db/db.js";
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
+import { connectDB } from './src/db/db.js';
+import { userRouter } from './src/routers/user.router.js';
 
-dotenv.config({})
+dotenv.config();
+
 const app = express();
 
-
 app.use(helmet());
-app.use(cors({
-    origin : "*"
-}));
-app.use(express.json({limit : '1mb'}));
-app.use(express.urlencoded({extended : true}));
+app.use(cors());
+app.use(express.json());
+app.use(cookieParser())
 
-const port = process.env.PORT;
+app.use("/user",userRouter);
 
-app.listen(port,() => {
-    console.log(`app is running on port ${port}`)
-})
+// Centralized error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: err.message || 'Internal Server Error' });
+});
 
-app.get("/",(req,res)=>{
-    res.status(200).json({msg:"backend server is up and working"})
-})
+const PORT = process.env.PORT || 5000;
 
-connectMongo();
+app.listen(PORT, async () => {
+  await connectDB();
+  console.log(`Server actively running on http://localhost:${PORT}`);
+});

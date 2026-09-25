@@ -1,16 +1,24 @@
-import mongoose, { mongo } from "mongoose";
-import dotenv from "dotenv";
-dotenv.config({})
+// src/config/db.js
+import { PrismaClient } from '@prisma/client';
 
-const mongo_uri = process.env.MONGO_URI;
+const globalForPrisma = globalThis;
 
+export const prisma =
+  globalForPrisma.prisma ||
+  new PrismaClient({
+    log: ['error', 'warn'],
+  });
 
-export const connectMongo = async() => {
-    try {
-       await mongoose.connect(mongo_uri);
-       console.log("db is connected")
-    } catch (error) {
-        console.log(`error come from db : ${error}`);
-        process.exit(1)
-    }
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma;
 }
+
+export const connectDB = async () => {
+  try {
+    await prisma.$connect();
+    console.log('PostgreSQL Connected via Prisma');
+  } catch (error) {
+    console.error('Database connection failed:', error.message);
+    process.exit(1);
+  }
+};
